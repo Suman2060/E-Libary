@@ -8,7 +8,7 @@ const Navbar = ({query,setQuery,onSearch,shelf}) => {
         {/* this is for search Section */}
         <div>
             <input type='text' placeholder='Search Books..' value={query} onChange={(e)=>setQuery(e.target.value)}/>
-            <button onClick={onSearch}>Search</button>
+            {/* <button onClick={onSearch}>Search</button> */}
         </div>
 
         {/* this is for saved shelf where we can see user saved book */}
