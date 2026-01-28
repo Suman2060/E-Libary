@@ -1,12 +1,23 @@
 import { useEffect, useState } from "react";
 import Navbar from "./Components/Navbar";
+import BookCard from './Components/BookCard'
+import BookModal from "./Components/BookModal";
 
 function App() {
   const [query, setQuery] = useState("");
   const [book, setBook] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // 📦 Load shelf from localStorage
+  // usestae hooks for models
+  const[selectedBook, setSelectedBook] = useState(null)
+  const[bookDetail, setBookDetail] = useState(null)
+  const[LoadingDetail, setLoadingDetail] = useState(false)
+  
+
+
+
+
+  // Load shelf from localStorage
   const [shelf, setShelf] = useState(() => {
     try {
       const saved = localStorage.getItem("shelf");
@@ -16,7 +27,7 @@ function App() {
     }
   });
 
-  // 🔍 Fetch books from API
+  // Fetch books from API
   const searchBooks = async () => {
     if (!query) return;
 
@@ -34,7 +45,7 @@ function App() {
     }
   };
 
-  // ⏳ DEBOUNCING LOGIC
+  // DEBOUNCING LOGIC
   useEffect(() => {
     if (!query || query.length<3) {
       setBook([]);
@@ -48,7 +59,7 @@ function App() {
     return () => clearTimeout(timer);
   }, [query]);
 
-  // 💾 Save shelf to localStorage
+  // Save shelf to localStorage
   useEffect(() => {
     localStorage.setItem("shelf", JSON.stringify(shelf));
   }, [shelf]);
@@ -70,16 +81,13 @@ function App() {
       <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:"20px",padding:"1rem"}}>
         {shelf.length === 0 && <p>You haven't saved any Books</p>}
         {shelf.map(b =>(
-          <div key={b.key} style ={{border:"1px solid #ccc",padding:"10px"}}>
-            <h3>{b.title}</h3>
-            <img
-            src={b.cover_i ? `https://covers.openlibrary.org/b/id/${b.cover_i}-M.jpg` : "https://via.placeholder.com/150?text=No+Cover"}
-            alt={b.title}
-            style={{width:"50%"}}
-            />
-            <p>{b.author_name ? b.author_name[0] : "Unknown author"}</p>
-            <button onClick={()=> removeFromShelf(b.key)}>Remove</button>
-          </div>
+          <BookCard 
+            key={b.key}
+            book={b}
+            onViewDetails={(book)=> setSelectedBook(book)} // this is used for model
+            onRemove={removeFromShelf} // this will trigger remove from shelf
+            isSaved={true}  
+          />
         ))}
       </div>
 
@@ -100,35 +108,24 @@ function App() {
 
         {!loading &&
           book.map((b) => (
-            <div
-              key={b.key}
-              style={{ border: "1px solid #ccc", padding: "10px" }}
-            >
-              <h3>{b.title}</h3>
-
-              <img
-                src={
-                  b.cover_i
-                    ? `https://covers.openlibrary.org/b/id/${b.cover_i}-M.jpg`
-                    : "https://via.placeholder.com/150?text=No+Cover"
-                }
-                alt={b.title}
-                style={{ width: "50%" }}
-              />
-
-              <p>{b.author_name ? b.author_name[0] : "Unknown author"}</p>
-
-              <button
-                onClick={() => addToShelf(b)}
-                disabled={shelf.some((book) => book.key === b.key)}
-              >
-                {shelf.some((book) => book.key === b.key)
-                  ? "Already Saved"
-                  : "Save to My Shelf"}
-              </button>
-            </div>
+            <BookCard
+            key={b.key}
+            book={b}
+            onViewDetail={(book)=> setSelectedBook(book)}
+            onSave={addToShelf}
+            isSaved={shelf.some((s) => s.key === b.key)}
+            />
           ))}
       </div>
+      {/* Model  */}
+      {LoadingDetail && <p>Books Detail is loading....</p>}
+
+      {selectedBook && !LoadingDetail &&(
+        <BookModal
+        book={selectedBook}
+        onClose={()=> setSelectedBook(null)}
+        />
+      )}
     </div>
   );
 }
