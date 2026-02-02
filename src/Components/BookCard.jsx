@@ -10,7 +10,7 @@ const BookCard = ({ book, onSave, onRemove, isSaved }) => { // Removed onViewDet
   }
 
   return (
-    <div className="bg-gray-100 hover:bg-amber-100 text-xl cursor-pointer border-2 rounded-lg border-blue-200 flex flex-col items-center p-4">
+    <div className="bg-gray-100 hover:bg-gray-300 text-xl cursor-pointer border-2 rounded-lg border-blue-200 flex flex-col items-center p-4">
 
       <h3 className="font-semibold text-center">{book.title}</h3>
 

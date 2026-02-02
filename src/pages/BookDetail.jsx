@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import dummyBooks from '../data/dummyBooks'
+import Navbar from '../Components/Navbar'
 
 const BookDetail = () => {
   const { id } = useParams()
@@ -43,6 +44,8 @@ const BookDetail = () => {
     )
   }
   return (
+    <>
+    <Navbar/>
     <div className='min-h-screen bg-gray-50 py-10'>
       <div className='p-6 max-w-3xl mx-auto bg-white shadow-lg rounded-lg'>
         <h1 className='text-4xl font-bold mb-6 text-gray-800 border-b pb-4'>{book.title}</h1>
@@ -79,11 +82,23 @@ const BookDetail = () => {
               <p className='text-sm text-gray-500'>
                 Book ID: <span className='font-mono bg-gray-100 p-1 rounded'>{book.key}</span>
               </p>
+            <button
+                onClick={() => navigate('/')}
+                className=' m-1.5 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
+              >
+                Return to Home
+           </button>
+           <button 
+           onClick={()=>onSave(book)}
+           className='m-1.5 px-6 py-2 bg-amber-300 rounded-lg hover:bg-amber-400 transition-colors'
+           >
+            Add to Shelf</button>
             </div>
           </div>
         </div>
       </div>
     </div>
+    </>
   )
 }
 

@@ -1,12 +1,16 @@
 import React from 'react'
+import { Navigate, useNavigate } from 'react-router-dom'
+import { useShelf } from '../context/ShelfContext'
 
-
-const Navbar = ({query,setQuery,shelf}) => {
+const Navbar = ({query,setQuery}) => {
+    const {shelf} =useShelf()
+    const navigate = useNavigate()
   return (
     <nav className='w-full border-b bg-white'>
        <div className='max-w 7xl mx-auto px-6 h-16 flex items-center justify-between'>
         {/* Left: Title */}
-        <h1 className='text-2xl font-bold text-blue'>
+        <h1 onClick={() => navigate("/")}
+        className='text-2xl font-bold text-blue'>
             Book Libary
         </h1>
         {/* RIght side for search bar and shelf */}
@@ -20,7 +24,8 @@ const Navbar = ({query,setQuery,shelf}) => {
                 className='hidden md:block w-72 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-300'
             />
             {/* for Shelf buttom */}
-            <button className='px-4 py-2 text-sm font-medium border border-black bg-amber-300 rounded-md hover:bg-amber-400 transition'>
+            <button onClick={()=>navigate("/shelf")}
+            className='px-4 py-2 text-sm font-medium border border-black bg-amber-300 rounded-md hover:bg-amber-400 transition'>
                 My Shelf({shelf.length})
             </button>
         </div>
