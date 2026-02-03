@@ -1,58 +1,66 @@
-import React from "react"
-import { useNavigate } from "react-router-dom"
+import React from "react";
 
-const BookCard = ({ book, onSave, onRemove, isSaved }) => { // Removed onViewDetail from props
-  const navigate = useNavigate()
-
-  const handleViewDetail = () => {
-    console.log("Navigating book is:", book.key, "type:", typeof book.key)
-    navigate(`/book/${book.key}`)
-  }
+const BookCard = ({ book, isSaved, onToggleSave, onViewDetail }) => {
+  // Add this to debug
+  console.log("BookCard props:", { isSaved, onToggleSave, onViewDetail });
 
   return (
-    <div className="bg-gray-100 hover:bg-gray-300 text-xl cursor-pointer border-2 rounded-lg border-blue-200 flex flex-col items-center p-4">
-
-      <h3 className="font-semibold text-center">{book.title}</h3>
-
-      <img
-        src={
-          book.cover_i
-            ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`
-            : "https://via.placeholder.com/150?text=No+Cover"
-        }
-        alt={book.title}
-        className="w-1/2 my-3"
-      />
-
-      <p className="text-gray-700">
-        {book.author_name ? book.author_name[0] : "Unknown Author"}
-      </p>
-
-      {/* FIXED: Remove onViewDetail call, just use navigate directly */}
-      <button
-        className="mt-2 text-blue-600 hover:text-amber-400"
-        onClick={handleViewDetail} // Changed this line
+    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
+      {/* Cover Image */}
+      <div
+        className="h-64 bg-gray-200 flex items-center justify-center cursor-pointer"
+        onClick={onViewDetail}
       >
-        View Detail
-      </button>
+        {book.coverUrl ? (
+          <img
+            src={book.coverUrl}
+            alt={book.title}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center">
+            <span className="text-6xl">📚</span>
+            <span className="text-gray-400 text-sm mt-2">No Cover</span>
+          </div>
+        )}
+      </div>
 
-      {isSaved ? (
-        <button
-          className="bg-red-500 text-white px-4 py-1 rounded mt-2"
-          onClick={() => onRemove(book.key)} // Changed from book.id to book.key for consistency
+      {/* Book Info */}
+      <div className="p-4">
+        <h3
+          className="font-semibold text-lg mb-1 line-clamp-2 cursor-pointer hover:text-blue-600"
+          onClick={onViewDetail}
         >
-          Remove
-        </button>
-      ) : (
+          {book.title}
+        </h3>
+
+        <p className="text-gray-500 text-sm mb-1">
+          {book.author || "Unknown Author"}
+        </p>
+
+        {book.firstPublishYear && (
+          <p className="text-gray-400 text-xs mb-3">
+            Published: {book.firstPublishYear}
+          </p>
+        )}
+
+        {/* This is the ONLY button — uses onToggleSave */}
         <button
-          className="bg-green-500 text-white px-4 py-1 rounded mt-2"
-          onClick={() => onSave(book)}
+          onClick={() => {
+            console.log("Button clicked! isSaved:", isSaved);
+            onToggleSave();                                     
+          }}
+          className={`w-full py-2 rounded-md font-medium transition ${
+            isSaved
+              ? "bg-red-500 text-white hover:bg-red-600"
+              : "bg-amber-300 text-black hover:bg-amber-400"
+          }`}
         >
-          Save to shelf
+          {isSaved ? "Remove from Shelf" : "Add to Shelf"}
         </button>
-      )}
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default BookCard
+export default BookCard;

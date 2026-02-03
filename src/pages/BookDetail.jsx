@@ -1,105 +1,165 @@
-import React, { useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import dummyBooks from '../data/dummyBooks'
-import Navbar from '../Components/Navbar'
+import React from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import Navbar from "../Components/Navbar";
+import { useShelf } from "../context/ShelfContext";
+import { getBookDetails } from "../services/bookAPI";
 
 const BookDetail = () => {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  // Debug logs
-  console.log(`Book detail -recived id ${id}`)
-  console.log(`Type of id - ${typeof id}`)
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { shelf, addToShelf, removeFromShelf } = useShelf();
 
+  const bookKey = `/works/${id}`;
 
-  // Find the book this compare the id from url and key
-  const book = dummyBooks.find((b) => b.key == id)
+  // Fetch book details using React Query
+  const { data: book, isLoading, isError, error } = useQuery({
+    queryKey: ["book", bookKey],
+    queryFn: () => getBookDetails(bookKey),
+  });
 
-  console.log("Found book:", book)
-  //  this is related with if book is not found
-  useEffect(() => {
-    if (!book) {
-      console.log("Book is not found, available books:", dummyBooks.map(b => b.key))
-      const timer = setTimeout(() => {
-        navigate('/')
-      }, 5000)
-      return () => clearTimeout(timer)
+  // Check if this book is already in shelf
+  const isBookInShelf = shelf.some((b) => b.key === bookKey);
+
+  // Add or remove from shelf
+  const handleToggleShelf = () => {
+    if (isBookInShelf) {
+      removeFromShelf(bookKey);
+    } else {
+      addToShelf({ ...book, key: bookKey });
     }
-  }, [book, navigate])
+  };
 
-  if (!book) {
+  // Loading State
+  if (isLoading) {
     return (
-      <div className='min-h-screen bg-gray-50 py-10 p-6'>
-        <div className='max-w-2xl mx-auto text-center'>
-          <h1 className='text-red font-bold text-center text-4xl'>Book not Found</h1>
-          <p className='text-xl text-center font-bold'>Sorry, We can't find your book</p>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="flex justify-center items-center py-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500"></div>
         </div>
-        <button
-          onClick={() => navigate('/')}
-          className='px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
-        >
-          Return to Home
-        </button>
       </div>
-
-    )
+    );
   }
+
+  // Error State
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="max-w-2xl mx-auto text-center py-20 px-6">
+          <h1 className="text-4xl font-bold text-red-500 mb-4">Error</h1>
+          <p className="text-lg text-gray-600 mb-6">{error.message}</p>
+          <button
+            onClick={() => navigate("/")}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
+            Return to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Success State - show book details
   return (
     <>
-    <Navbar/>
-    <div className='min-h-screen bg-gray-50 py-10'>
-      <div className='p-6 max-w-3xl mx-auto bg-white shadow-lg rounded-lg'>
-        <h1 className='text-4xl font-bold mb-6 text-gray-800 border-b pb-4'>{book.title}</h1>
+      <Navbar />
+      <div className="min-h-screen bg-gray-50 py-10">
+        <div className="p-6 max-w-3xl mx-auto bg-white shadow-lg rounded-lg">
+          {/* Back Button */}
+          <button
+            onClick={() => navigate(-1)}
+            className="mb-4 text-blue-600 hover:underline flex items-center gap-1"
+          >
+            ← Back
+          </button>
 
-        <div className='flex flex-col md:flex-row gap-8'>
-          <div className='md:w-1/3'>
-            <img
-              src={
-                book.cover_i
-                  ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`
-                  : "https://via.placeholder.com/300x450?text=No+Cover+Available"
-              }
-              alt={book.title}
-              className='w-full rounded-lg shadow-md'
-            />
-          </div>
+          <h1 className="text-4xl font-bold mb-6 text-gray-800 border-b pb-4">
+            {book.title}
+          </h1>
 
-          <div className='md:w-2/3'>
-            <div className='mb-6'>
-              <h2 className='text-xl font-semibold text-gray-700 mb-2'>Author</h2>
-              <p className='text-lg text-gray-800'>
-                {book.author_name ? book.author_name[0] : "Unknown Author"}
-              </p>
+          <div className="flex flex-col md:flex-row gap-8">
+            {/* Cover Image */}
+            <div className="md:w-1/3">
+              {book.coverUrl ? (
+                <img
+                  src={book.coverUrl}
+                  alt={book.title}
+                  className="w-full rounded-lg shadow-md"
+                />
+              ) : (
+                <div className="w-full aspect-[2/3] bg-gray-200 rounded-lg flex items-center justify-center">
+                  <span className="text-6xl">📚</span>
+                </div>
+              )}
             </div>
 
-            <div className='mb-6'>
-              <h2 className='text-xl font-semibold text-gray-700 mb-2'>Description</h2>
-              <p className='text-lg text-gray-700 leading-relaxed'>
-                {book.description || "No description available for this book."}
-              </p>
-            </div>
+            {/* Book Info */}
+            <div className="md:w-2/3">
+              {/* Description */}
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-gray-700 mb-2">
+                  Description
+                </h2>
+                <p className="text-lg text-gray-700 leading-relaxed">
+                  {book.description}
+                </p>
+              </div>
 
-            <div className='mt-8 pt-6 border-t'>
-              <p className='text-sm text-gray-500'>
-                Book ID: <span className='font-mono bg-gray-100 p-1 rounded'>{book.key}</span>
+              {/* Subjects */}
+              {book.subjects && book.subjects.length > 0 && (
+                <div className="mb-6">
+                  <h2 className="text-xl font-semibold text-gray-700 mb-2">
+                    Subjects
+                  </h2>
+                  <div className="flex flex-wrap gap-2">
+                    {book.subjects.slice(0, 8).map((subject, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+                      >
+                        {subject}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Buttons */}
+              <div className="mt-8 pt-6 border-t flex flex-wrap gap-3">
+                <button
+                  onClick={handleToggleShelf}
+                  className={`px-6 py-2 rounded-lg font-medium transition ${
+                    isBookInShelf
+                      ? "bg-red-500 text-white hover:bg-red-600"
+                      : "bg-amber-300 text-black hover:bg-amber-400"
+                  }`}
+                >
+                  {isBookInShelf ? "Remove from Shelf" : "Add to Shelf"}
+                </button>
+
+                <button
+                  onClick={() => navigate("/")}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                >
+                  Return to Home
+                </button>
+              </div>
+
+              {/* Book ID */}
+              <p className="text-sm text-gray-400 mt-6">
+                Book ID:{" "}
+                <span className="font-mono bg-gray-100 p-1 rounded">
+                  {bookKey}
+                </span>
               </p>
-            <button
-                onClick={() => navigate('/')}
-                className=' m-1.5 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
-              >
-                Return to Home
-           </button>
-           <button 
-           onClick={()=>onSave(book)}
-           className='m-1.5 px-6 py-2 bg-amber-300 rounded-lg hover:bg-amber-400 transition-colors'
-           >
-            Add to Shelf</button>
             </div>
           </div>
         </div>
       </div>
-    </div>
     </>
-  )
-}
+  );
+};
 
-export default BookDetail
+export default BookDetail;

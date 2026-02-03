@@ -10,7 +10,7 @@ const App = () => {
       <Routes>
         <Route path='/' element={<Home/>} />
         {/* Change this to match your navigation path */}
-        <Route path="/book/:id" element={<BookDetail/>} />
+        <Route path="/book/works/:id" element={<BookDetail/>} />
         <Route path='/shelf' element={<Shelf/>}/>
       </Routes>
   )

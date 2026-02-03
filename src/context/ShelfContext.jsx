@@ -21,9 +21,11 @@ useEffect(()=>{
     });
   };
 
-  const removeFromShelf = (bookKey) => {
-    setShelf((prev) => prev.filter((b) => b.key !== bookKey));
-  };
+const removeFromShelf = (bookKey) => {
+  console.log("Removing book key:", bookKey);                    
+  console.log("Current shelf keys:", shelf.map(b => b.key));     
+  setShelf((prev) => prev.filter((b) => b.key !== bookKey));
+};
 
   return (
     <ShelfContext.Provider value={{ shelf, addToShelf, removeFromShelf }}>

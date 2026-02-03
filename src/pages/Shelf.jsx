@@ -2,9 +2,14 @@ import React from "react";
 import Navbar from "../Components/Navbar";
 import BookCard from "../Components/BookCard";
 import { useShelf } from "../context/ShelfContext";
+import { useNavigate } from "react-router-dom";
 
 const Shelf = () => {
   const { shelf, removeFromShelf } = useShelf();
+  const navigate = useNavigate()
+
+  console.log("current Shelf:", shelf)
+  console.log("Shelf Key:", shelf.map(b => b.key))
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -26,8 +31,8 @@ const Shelf = () => {
                 key={book.key}
                 book={book}
                 isSaved={true}
-                onRemove={() => removeFromShelf(book.key)}
-                onViewDetail={() => {}}
+                onToggleSave={() => removeFromShelf(book.key)}
+                onViewDetail={() => navigate(`/book${book.key}`)}
               />
             ))}
           </div>
