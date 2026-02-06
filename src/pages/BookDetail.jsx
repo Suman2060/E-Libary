@@ -8,17 +8,24 @@ import LoadingSpinner from "../Components/LoadingSpinner";
 import ErrorState from "../Components/Errorstate";
 
 const BookDetail = () => {
-  const { id } = useParams();
+  const params = useParams();
+  const id = params["*"];
   const navigate = useNavigate();
   const { shelf, addToShelf, removeFromShelf } = useShelf();
 
-  const bookKey = `/works/${id}`;
+  // Construct the full book key for Open Library API
+  const bookKey = id.startsWith("/") ? id : `/${id}`;
 
   // Fetch book details using React Query
   const { data: book, isLoading, isError, error } = useQuery({
     queryKey: ["book", bookKey],
     queryFn: () => getBookDetails(bookKey),
   });
+
+  // Construct cover image URL if covers exist
+  const coverUrl = book?.covers?.[0]
+    ? `https://covers.openlibrary.org/b/id/${book.covers[0]}-L.jpg`
+    : null;
 
   // Check if this book is already in shelf
   const isBookInShelf = shelf.some((b) => b.key === bookKey);
@@ -63,9 +70,9 @@ const BookDetail = () => {
           <div className="flex flex-col md:flex-row gap-8">
             {/* Cover Image */}
             <div className="md:w-1/3">
-              {book.coverUrl ? (
+              {coverUrl ? (
                 <img
-                  src={book.coverUrl}
+                  src={coverUrl}
                   alt={book.title}
                   className="w-full rounded-lg shadow-md"
                 />
@@ -111,11 +118,10 @@ const BookDetail = () => {
               <div className="mt-8 pt-6 border-t flex flex-wrap gap-3">
                 <button
                   onClick={handleToggleShelf}
-                  className={`px-6 py-2 rounded-lg font-medium transition ${
-                    isBookInShelf
+                  className={`px-6 py-2 rounded-lg font-medium transition ${isBookInShelf
                       ? "bg-red-500 text-white hover:bg-red-600"
                       : "bg-amber-300 text-black hover:bg-amber-400"
-                  }`}
+                    }`}
                 >
                   {isBookInShelf ? "Remove from Shelf" : "Add to Shelf"}
                 </button>

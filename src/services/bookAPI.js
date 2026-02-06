@@ -6,7 +6,7 @@ export const searchBooks = async (query, page = 1) => {
   try {
     const limit = 20; // Books per page
     const offset = (page - 1) * limit;
-    
+
     const response = await fetch(
       `${BASE_URL}/search.json?q=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}`
     );
@@ -42,7 +42,9 @@ export const searchBooks = async (query, page = 1) => {
 
 export const getBookDetails = async (bookKey) => {
   try {
-    const response = await fetch(`${BASE_URL}${bookKey}.json`);
+    // Ensure bookKey starts with /
+    const formattedKey = bookKey.startsWith("/") ? bookKey : `/${bookKey}`;
+    const response = await fetch(`${BASE_URL}${formattedKey}.json`);
 
     if (!response.ok) {
       throw new Error("Failed to fetch book details");
