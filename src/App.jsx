@@ -1,19 +1,19 @@
-import React from 'react'
-import Home from "./pages/Home" 
-import { Route, Routes } from 'react-router-dom'
-import BookDetail from './pages/BookDetail'
-import Shelf from './pages/Shelf'
+import React from "react";
+import { Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
+import SearchPage from "./pages/SearchPage";
+import Shelf from "./pages/Shelf";
+import BookDetail from "./pages/BookDetail";
 
-const App = () => {
+function App() {
   return (
-    
-      <Routes>
-        <Route path='/' element={<Home/>} />
-        {/* Change this to match your navigation path */}
-        <Route path="/book/works/:id" element={<BookDetail/>} />
-        <Route path='/shelf' element={<Shelf/>}/>
-      </Routes>
-  )
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/search" element={<SearchPage />} />
+      <Route path="/shelf" element={<Shelf />} />
+      <Route path="/book/:bookKey" element={<BookDetail />} />
+    </Routes>
+  );
 }
 
-export default App
+export default App;

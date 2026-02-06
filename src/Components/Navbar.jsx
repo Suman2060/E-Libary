@@ -1,38 +1,77 @@
-import React from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
-import { useShelf } from '../context/ShelfContext'
+import React from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Search, BookMarked, Home } from "lucide-react";
 
-const Navbar = ({query,setQuery}) => {
-    const {shelf} =useShelf()
-    const navigate = useNavigate()
+const Navbar = ({ query, setQuery }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (query.trim()) {
+      // Redirect to search page with query
+      navigate(`/search?q=${encodeURIComponent(query.trim())}`);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    setQuery(e.target.value);
+  };
+
   return (
-    <nav className='w-full border-b bg-white'>
-       <div className='max-w 7xl mx-auto px-6 h-16 flex items-center justify-between'>
-        {/* Left: Title */}
-        <h1 onClick={() => navigate("/")}
-        className='text-2xl font-bold text-blue'>
-            Book Libary
-        </h1>
-        {/* RIght side for search bar and shelf */}
-        <div className='flex items-center gap-4 '>
-            {/* search */}
-            <input 
-                type='text'
-                placeholder='Search Books...'
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className='hidden md:block w-72 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-amber-300'
-            />
-            {/* for Shelf buttom */}
-            <button onClick={()=>navigate("/shelf")}
-            className='px-4 py-2 text-sm font-medium border border-black bg-amber-300 rounded-md hover:bg-amber-400 transition'>
-                My Shelf({shelf.length})
-            </button>
-        </div>
-       </div>
-    </nav>
-    
-  )
-}
+    <nav className="bg-white shadow-md sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="flex items-center justify-between gap-4">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2 text-2xl font-bold text-blue-600 hover:text-blue-700 transition-colors">
+            <BookMarked size={32} />
+            <span className="hidden sm:block">BookLib</span>
+          </Link>
 
-export default Navbar
+          {/* Search Bar */}
+          <form onSubmit={handleSearch} className="flex-1 max-w-2xl">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="text"
+                value={query}
+                onChange={handleInputChange}
+                placeholder="Search books, authors, topics..."
+                className="w-full pl-12 pr-4 py-3 rounded-full border-2 border-gray-200 focus:border-blue-500 focus:outline-none transition-colors"
+              />
+            </div>
+          </form>
+
+          {/* Navigation Links */}
+          <div className="flex items-center gap-2">
+            <Link
+              to="/"
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                location.pathname === "/"
+                  ? "bg-blue-100 text-blue-700"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              <Home size={20} />
+              <span className="hidden md:block">Home</span>
+            </Link>
+
+            <Link
+              to="/shelf"
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                location.pathname === "/shelf"
+                  ? "bg-blue-100 text-blue-700"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              <BookMarked size={20} />
+              <span className="hidden md:block">My Shelf</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+};
+
+export default Navbar;

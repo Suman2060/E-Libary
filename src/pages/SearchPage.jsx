@@ -1,50 +1,53 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "../Components/Navbar";
 import BookCard from "../Components/BookCard";
 import { useShelf } from "../context/ShelfContext";
 import { useQuery } from "@tanstack/react-query";
 import { searchBooks } from "../services/bookAPI";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 
-const Home = () => {
+const SearchPage = () => {
   const { shelf, addToShelf, removeFromShelf } = useShelf();
-  const [query, setQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  
+  const queryParam = searchParams.get("q") || "";
+  const [query, setQuery] = useState(queryParam);
+  const [searchTerm, setSearchTerm] = useState(queryParam);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // Random subjects to fetch diverse books
-  const randomSubjects = [
-    "science", "history", "art", "technology", "philosophy",
-    "adventure", "mystery", "romance", "biography", "fantasy",
-    "psychology", "nature", "music", "cooking", "travel"
-  ];
-
-  // Get a random subject for initial load
-  const getRandomSubject = () => {
-    return randomSubjects[Math.floor(Math.random() * randomSubjects.length)];
-  };
-
-  // Store random subject in state so it doesn't change on every re-render
-  const [randomSubject, setRandomSubject] = useState(() => getRandomSubject());
-
-  // Redirect to search page when user searches
+  // Update search term when URL param changes
   useEffect(() => {
-    if (query && query.trim() !== "") {
-      const timer = setTimeout(() => {
-        navigate(`/search?q=${encodeURIComponent(query.trim())}`);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [query, navigate]);
+    const q = searchParams.get("q") || "";
+    setQuery(q);
+    setSearchTerm(q);
+    setCurrentPage(1);
+  }, [searchParams]);
 
   // Fetch data with pagination
-  const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["books", randomSubject, currentPage],
-    queryFn: () => searchBooks(randomSubject, currentPage),
-    enabled: true,
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["books", searchTerm, currentPage],
+    queryFn: () => searchBooks(searchTerm, currentPage),
+    enabled: searchTerm.length > 0,
     keepPreviousData: true,
   });
+
+  // Debouncing effect when user stops typing
+  useEffect(() => {
+    if (!query || query.trim() === "") {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setSearchTerm(query.trim());
+      setCurrentPage(1);
+      // Update URL
+      navigate(`/search?q=${encodeURIComponent(query.trim())}`, { replace: true });
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [query, navigate]);
 
   // Check if book is in shelf
   const isBookInShelf = (bookKey) => {
@@ -107,80 +110,92 @@ const Home = () => {
     return pages;
   };
 
-  // Shuffle books button
-  const handleShuffle = () => {
-    setQuery("");
-    setCurrentPage(1);
-    setRandomSubject(getRandomSubject());
-    refetch();
-  };
-
   return (
-    <div className="min-h-screen  from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Navbar */}
       <Navbar query={query} setQuery={setQuery} />
 
-      {/* Hero Section */}
-      <section className="relative w-full bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 overflow-hidden">
-        <div className="absolute inset-0 bg-black opacity-10"></div>
-        <div className="relative max-w-7xl mx-auto px-6 py-20 md:py-28">
-          <div className="text-center text-white">
-            <h1 className="text-4xl md:text-6xl font-bold mb-4 animate-fade-in">
-              Welcome To Book Library
+      {/* Search Header */}
+      <section className="relative w-full bg-gradient-to-r from-Blye-600 via-blue-700 to-indigo-700 py-12">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center text-white mb-8">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              Search Books
             </h1>
-            <p className="text-lg md:text-2xl mb-8 text-blue-100">
-              Discover new pages to start your new adventure
+            <p className="text-lg md:text-xl text-purple-100">
+              Find your next favorite book
             </p>
-            <button
-              onClick={handleShuffle}
-              className="px-6 py-3 bg-white text-blue-700 font-semibold rounded-full hover:bg-blue-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-            >
-               Discover Random Books
-            </button>
+          </div>
+
+          {/* Search Input */}
+          <div className="max-w-2xl mx-auto">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={24} />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search for books, authors, topics..."
+                className="w-full pl-14 pr-4 py-4 rounded-full text-lg focus:outline-none focus:ring-4 focus:ring-purple-300 shadow-xl"
+              />
+            </div>
           </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-16  from-gray-50 to-transparent"></div>
       </section>
 
-      {/* Search Result */}
+      {/* Search Results */}
       <section className="max-w-7xl mx-auto px-6 py-12">
         {/* Title and result count */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-          <div>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
-              Discover Books
-            </h2>
-            <p className="text-gray-600">Exploring diverse collections</p>
-          </div>
-          {data && (
-            <div className="flex items-center gap-4">
-              <p className="text-gray-600 bg-white px-4 py-2 rounded-full shadow-sm">
-                📚 {data.totalResults?.toLocaleString()} books found
-              </p>
-              <p className="text-gray-600 bg-white px-4 py-2 rounded-full shadow-sm">
-                Page {currentPage}
-              </p>
+        {searchTerm && (
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
+                Results for "{searchTerm}"
+              </h2>
             </div>
-          )}
-        </div>
+            {data && (
+              <div className="flex items-center gap-4">
+                <p className="text-gray-600 bg-white px-4 py-2 rounded-full shadow-sm">
+                  📚 {data.totalResults?.toLocaleString()} books found
+                </p>
+                <p className="text-gray-600 bg-white px-4 py-2 rounded-full shadow-sm">
+                  Page {currentPage}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Empty State - No search yet */}
+        {!searchTerm && (
+          <div className="text-center py-32">
+            <div className="text-8xl mb-6">🔍</div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-2">
+              Start Searching
+            </h3>
+            <p className="text-gray-600 text-lg">
+              Enter a search term above to find books
+            </p>
+          </div>
+        )}
 
         {/* Loading State */}
-        {isLoading && (
+        {isLoading && searchTerm && (
           <div className="flex flex-col justify-center items-center py-32">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600 mb-4"></div>
-            <p className="text-gray-600 text-lg">Loading amazing books...</p>
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-200 border-t-purple-600 mb-4"></div>
+            <p className="text-gray-600 text-lg">Searching for "{searchTerm}"...</p>
           </div>
         )}
 
         {/* Error State */}
-        {isError && (
+        {isError && searchTerm && (
           <div className="text-center py-20 bg-white rounded-2xl shadow-lg">
-            <div className="text-6xl mb-4">😕</div>
+            <div className="text-6xl mb-4"></div>
             <p className="text-red-500 text-xl mb-2">Oops! Something went wrong</p>
             <p className="text-gray-600 mb-6">{error.message}</p>
             <button
-              className="px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl"
-              onClick={handleShuffle}
+              className="px-6 py-3 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl"
+              onClick={() => window.location.reload()}
             >
               Try Again
             </button>
@@ -212,7 +227,7 @@ const Home = () => {
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
                     currentPage === 1
                       ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      : "bg-white text-blue-600 hover:bg-blue-50 shadow-md hover:shadow-lg"
+                      : "bg-white text-purple-600 hover:bg-purple-50 shadow-md hover:shadow-lg"
                   }`}
                 >
                   <ChevronLeft size={20} />
@@ -228,10 +243,10 @@ const Home = () => {
                       disabled={pageNum === "..."}
                       className={`min-w-[40px] h-10 rounded-lg font-medium transition-all duration-300 ${
                         pageNum === currentPage
-                          ? "bg-blue-600 text-white shadow-lg scale-110"
+                          ? "bg-purple-600 text-white shadow-lg scale-110"
                           : pageNum === "..."
                           ? "bg-transparent text-gray-400 cursor-default"
-                          : "bg-white text-gray-700 hover:bg-blue-50 shadow-md hover:shadow-lg"
+                          : "bg-white text-gray-700 hover:bg-purple-50 shadow-md hover:shadow-lg"
                       }`}
                     >
                       {pageNum}
@@ -246,7 +261,7 @@ const Home = () => {
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
                     !data || currentPage >= Math.ceil(data.totalResults / 20)
                       ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      : "bg-white text-blue-600 hover:bg-blue-50 shadow-md hover:shadow-lg"
+                      : "bg-white text-purple-600 hover:bg-purple-50 shadow-md hover:shadow-lg"
                   }`}
                 >
                   Next
@@ -262,19 +277,22 @@ const Home = () => {
           </>
         )}
 
-        {/* No Result */}
-        {!isLoading && !isError && data && data.books.length === 0 && (
+        {/* No Results */}
+        {!isLoading && !isError && data && data.books.length === 0 && searchTerm && (
           <div className="text-center py-20 bg-white rounded-2xl shadow-lg">
             <div className="text-6xl mb-4">📚</div>
             <p className="text-gray-700 text-xl mb-2">
-              No books found
+              No books found for "{searchTerm}"
             </p>
-            <p className="text-gray-500 mb-6">Try discovering new books</p>
+            <p className="text-gray-500 mb-6">Try a different search term</p>
             <button
-              onClick={handleShuffle}
-              className="px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl"
+              onClick={() => {
+                setQuery("");
+                setSearchTerm("");
+              }}
+              className="px-6 py-3 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl"
             >
-              Discover Random Books
+              Clear Search
             </button>
           </div>
         )}
@@ -283,4 +301,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default SearchPage;

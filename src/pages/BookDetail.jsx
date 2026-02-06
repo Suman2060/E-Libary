@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import Navbar from "../Components/Navbar";
 import { useShelf } from "../context/ShelfContext";
 import { getBookDetails } from "../services/bookAPI";
+import LoadingSpinner from "../Components/LoadingSpinner";
+import ErrorState from "../Components/Errorstate";
 
 const BookDetail = () => {
   const { id } = useParams();
@@ -32,33 +34,12 @@ const BookDetail = () => {
 
   // Loading State
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <div className="flex justify-center items-center py-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500"></div>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   // Error State
   if (isError) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <div className="max-w-2xl mx-auto text-center py-20 px-6">
-          <h1 className="text-4xl font-bold text-red-500 mb-4">Error</h1>
-          <p className="text-lg text-gray-600 mb-6">{error.message}</p>
-          <button
-            onClick={() => navigate("/")}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            Return to Home
-          </button>
-        </div>
-      </div>
-    );
+    return <ErrorState error={error} />;
   }
 
   // Success State - show book details
